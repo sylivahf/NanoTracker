@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include "nanotrack.hpp"
+#include <opencv2/imgcodecs.hpp>
 
 using namespace std;
 
@@ -112,6 +113,8 @@ void NanoTrack::init(cv::Mat img, cv::Rect bbox)
     cv::Mat z_crop;
     
     z_crop  = get_subwindow_tracking(img, target_pos, cfg.exemplar_size, int(s_z),avg_chans); //cv::Mat BGR order 
+    cv::imwrite("img0.jpg", img);
+    cv::imwrite("z_crop.jpg", z_crop);
 
     vector<vector<float>> rknnOutputs;
     int ret = module_T127.runRKNN(rknnOutputs, (void*)z_crop.data, 127 * 127 * 3, RKNN_TENSOR_UINT8, false);
@@ -346,7 +349,7 @@ void NanoTrack::create_grids()
     }
 }
 
-cv::Mat NanoTrack::get_subwindow_tracking(cv::Mat im, cv::Point2f pos, int model_sz, int original_sz,cv::Scalar channel_ave)
+cv::Mat NanoTrack::get_subwindow_tracking(cv::Mat im, cv::Point2f pos, int model_sz, int original_sz, cv::Scalar channel_ave)
 {
     float c = (float)(original_sz + 1) / 2;
     int context_xmin = pos.x - c + 0.5;
@@ -374,7 +377,8 @@ cv::Mat NanoTrack::get_subwindow_tracking(cv::Mat im, cv::Point2f pos, int model
     }
     else
         im_path_original = im(cv::Rect(context_xmin, context_ymin, context_xmax - context_xmin + 1, context_ymax - context_ymin + 1));
-
+    // save
+    cv::imwrite("im_path_original.jpg", im_path_original);
     cv::Mat im_path;
     cv::resize(im_path_original, im_path, cv::Size(model_sz, model_sz));
 

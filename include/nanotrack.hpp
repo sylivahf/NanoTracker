@@ -85,7 +85,7 @@ public:
     vector<float> result_T, result_X;
 
 
-    int stride=16;
+    int stride=8;
     
     // state  dynamic
     State state;
