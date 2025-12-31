@@ -9,10 +9,10 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
 
 set(CMAKE_C_COMPILER
-    /home/itds/rk3588/rk3588_linux_release_v1.2.1/extra-tools/gcc-linaro-10.2.1-2021.01-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc)
+    /home/rk3588/rk3588_linux_release_v1.2.1/extra-tools/gcc-linaro-10.2.1-2021.01-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc)
 
 set(CMAKE_CXX_COMPILER
-    /home/itds/rk3588/rk3588_linux_release_v1.2.1/extra-tools/gcc-linaro-10.2.1-2021.01-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++)
+    /home/rk3588/rk3588_linux_release_v1.2.1/extra-tools/gcc-linaro-10.2.1-2021.01-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++)
 
 # set c c++ compiler ,
  
@@ -22,9 +22,9 @@ add_definitions(-Wno-write-strings -Wno-return-type)
 
 # 设置 OpenCV 路径
 set(OPENCV_DIR 
-    /home/itds/algo_onboard_debug_env/gdbserver_test/test_prj/submodule/base_Algorithm/lib/libopencv4)
+    /home/lib/libopencv4)
 set(FFMPEG_DIR 
-    /home/itds/algo_onboard_debug_env/gdbserver_test/test_prj/lib/libffmpeg)
+    /home/lib/libffmpeg)
 set(OpenCV_INCLUDE_DIRS 
     ${OPENCV_DIR}/include/opencv4)
 
@@ -50,7 +50,7 @@ set(RKNN_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/rknpu2/include")
 set(RKNN_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/rknpu2/Linux/aarch64")
 
 # 设置RGA包含路径
-set(RGA_INCLUDE_PATH "/home/itds/algo_onboard_debug_env/gdbserver_test/test_prj/submodule/AI_Algorithm/include/3rdparty/rga/RK3588/include")
+set(RGA_INCLUDE_PATH "/home/3rdparty/rga/RK3588/include")
 
 # 查找所有的源文件
 file(GLOB SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
