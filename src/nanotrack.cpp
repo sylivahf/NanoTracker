@@ -5,6 +5,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 using namespace std;
+int g_frame_idx = 0;
 
 std::vector<float> convert_score(const std::vector<float> &input){
     std::vector<float> exp_values(input.size());
@@ -18,13 +19,13 @@ std::vector<float> convert_score(const std::vector<float> &input){
     return output;
 }
 
-inline float fast_exp(float x)
+inline float fast_exp(float x) // 快速近似
 {
     union {
         uint32_t i;
         float f;
     } v{};
-    v.i = (1 << 23) * (1.4426950409 * x + 126.93490512f);
+    v.i = (1 << 23) * (1.4426950409 * x + 126.93490512f); // 指数运算转换为整数运算
     return v.f;
 }
 
@@ -113,8 +114,8 @@ void NanoTrack::init(cv::Mat img, cv::Rect bbox)
     cv::Mat z_crop;
     
     z_crop  = get_subwindow_tracking(img, target_pos, cfg.exemplar_size, int(s_z),avg_chans); //cv::Mat BGR order 
-    cv::imwrite("img0.jpg", img);
-    cv::imwrite("z_crop.jpg", z_crop);
+    // cv::imwrite("img0.jpg", img);
+    // cv::imwrite("z_crop.jpg", z_crop);
 
     vector<vector<float>> rknnOutputs;
     int ret = module_T127.runRKNN(rknnOutputs, (void*)z_crop.data, 127 * 127 * 3, RKNN_TENSOR_UINT8, false);
@@ -276,6 +277,7 @@ float NanoTrack::track(cv::Mat& im)
     float d_search = (cfg.instance_size - cfg.exemplar_size) / 2; 
     float pad = d_search / scale_z; 
     float s_x = s_z + 2*pad;
+    // printf("s_z:%f, s_x: %f\n", s_z, s_x);
 
     cv::Mat x_crop;  
     x_crop  = get_subwindow_tracking(im, target_pos, cfg.instance_size, std::round(s_x),state.channel_ave);
@@ -287,13 +289,30 @@ float NanoTrack::track(cv::Mat& im)
     float cls_score_max;
 
     this->update(x_crop, target_pos, target_sz, scale_z, cls_score_max);
-    target_pos.x = std::max(0, min(state.im_w, target_pos.x));
-    target_pos.y = std::max(0, min(state.im_h, target_pos.y));
-    target_sz.x = float(std::max(10, min(state.im_w, int(target_sz.x))));
-    target_sz.y = float(std::max(10, min(state.im_h, int(target_sz.y))));
 
-    state.target_pos = target_pos;
-    state.target_sz = target_sz;
+    // update state: bbox 反向约束
+    float cx = target_pos.x;
+    float cy = target_pos.y;
+    float w  = target_sz.x;
+    float h  = target_sz.y;
+
+    // 1. 尺寸约束
+    w = std::max(w, 1.0f);
+    h = std::max(h, 1.0f);
+    w = std::min(w, (float)state.im_w);
+    h = std::min(h, (float)state.im_h);
+
+    // 2. 限制中心点，使 bbox 不越界
+    float half_w = w * 0.5f;
+    float half_h = h * 0.5f;
+
+    cx = std::max(half_w, std::min(cx, state.im_w - 1.0f - half_w));
+    cy = std::max(half_h, std::min(cy, state.im_h - 1.0f - half_h));
+
+    // 3. 回写 state
+    state.target_pos = cv::Point2f(cx, cy);
+    state.target_sz  = cv::Point2f(w, h);
+
     return cls_score_max;
 }
 
@@ -378,7 +397,9 @@ cv::Mat NanoTrack::get_subwindow_tracking(cv::Mat im, cv::Point2f pos, int model
     else
         im_path_original = im(cv::Rect(context_xmin, context_ymin, context_xmax - context_xmin + 1, context_ymax - context_ymin + 1));
     // save
-    cv::imwrite("im_path_original.jpg", im_path_original);
+    g_frame_idx += 1;
+    cv::imwrite("./crop/im" + std::to_string(g_frame_idx) + "_crop.jpg", im_path_original);
+    // printf("im_path_original.rows: %d, im_path_original.cols: %d\n", im_path_original.rows, im_path_original.cols);
     cv::Mat im_path;
     cv::resize(im_path_original, im_path, cv::Size(model_sz, model_sz));
 

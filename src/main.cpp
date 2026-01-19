@@ -2,6 +2,7 @@
 #include "RKNNModel.h"
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -49,6 +50,7 @@ int main(int argc, char** argv) {
     double global_t_start = cv::getTickCount();
     string score_near_box = "";
     Point2f top_left, bottom_right;
+    float score = 0;
     while (true) {
         cap >> frame;
         if (frame.empty()) {
@@ -58,10 +60,10 @@ int main(int argc, char** argv) {
             tracker.init(frame, bbox);
             top_left = Point2f(bbox.x, bbox.y);
             bottom_right = Point2f(bbox.x + bbox.width, bbox.y + bbox.height);
-            score_near_box = "init: ";
+            score_near_box = to_string(frame_count+1) +"_init: ";
         }else{
             double t1 = getTickCount();
-            float score = tracker.track(frame);
+            score = tracker.track(frame);
             double t2 = getTickCount();
             double process_time_ms = (t2 - t1) * 1000 / getTickFrequency();
             double fps_value = getTickFrequency() / (t2 - t1);
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
             if (frame_count > 10) {
                 total_time += process_time_ms/1000;
             }
-            score_near_box = "S:" + to_string(score).substr(0, 4);  // 只显示前4位字符
+            score_near_box = to_string(frame_count+1) + "_S:" + to_string(score).substr(0, 4);  // 只显示前4位字符
             top_left = Point2f(tracker.state.target_pos.x - tracker.state.target_sz.x/2, 
                           tracker.state.target_pos.y - tracker.state.target_sz.y/2);
             bottom_right = Point2f(tracker.state.target_pos.x + tracker.state.target_sz.x/2, 
@@ -88,7 +90,31 @@ int main(int argc, char** argv) {
         // 写入视频
         string filename = "output/frame_" + to_string(frame_count) + ".jpg";
         cv::imwrite(filename, frame);
-        // video_writer.write(frame);
+        video_writer.write(frame);
+
+        // box 写入txt
+        // 计算 bbox（与 tracker 状态一致）
+        float x = top_left.x;
+        float y = top_left.y;
+        float w = bottom_right.x - top_left.x;
+        float h = bottom_right.y - top_left.y;
+        float cls_score = score;
+
+        x = std::max(0.0f, x);
+        y = std::max(0.0f, y);
+        w = std::min(w, (float)tracker.state.im_w - x);
+        h = std::min(h, (float)tracker.state.im_h - y);
+         
+        string txtname = "output_txt/frame_" + to_string(frame_count) + ".txt";
+        std::ofstream ofs(txtname);
+        if (ofs.is_open()) {
+            ofs << x << " "
+                << y << " "
+                << w << " "
+                << h << " "
+                << cls_score << std::endl;
+            ofs.close();
+        }
 
         // // 显示追踪结果
         // imshow("Tracking", frame);

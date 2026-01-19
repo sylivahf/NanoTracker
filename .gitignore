@@ -1,4 +1,6 @@
 build
 .vscode
 CMakeLists.txt
+update_3588.sh
+make.sh
 *.example
