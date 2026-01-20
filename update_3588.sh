@@ -1,9 +1,9 @@
 #!/bin/bash
 
-IP="172.16.192.238"
+IP="175.17.192.200"
 REMOTE_DIR="/root/nanotrack"
-LOCAL_DIR="/home/itds/NanoTracker/build"
-LOCAL_DIR_MODEL="/home/itds/NanoTracker/models"
+LOCAL_DIR="/home/NanoTracker/build"
+LOCAL_DIR_MODEL="/home/NanoTracker/models"
 # Kill existing processes
 ssh root@$IP "pkill gdbserver; fuser -k $REMOTE_DIR/nanotrack"
 
@@ -27,8 +27,7 @@ ssh root@$IP "
         echo "未发现 output_txt 文件夹..."
     fi
 
-    # cd $REMOTE_DIR && chmod +x nanotrack && ./nanotrack /root/gdbserver_test/data/20251114pcie_output.h264
-    cd $REMOTE_DIR && chmod +x nanotrack && ./nanotrack VTOL-Fixed-Wing-Model-Flight-down.mp4
+    cd $REMOTE_DIR && chmod +x nanotrack && ./nanotrack girl_dance.mp4
     echo "Done"
 
 "
